@@ -25,7 +25,7 @@
           <n-form-item label="">
             <a target="_blank" href="https://i.mypikpak.com/v1/file/center/account/v1/password/?type=forget_password&locale=zh-cn" class="forget-password">忘记密码</a>
             <router-link to="/register" class="register">注册</router-link>
-            <a href="javascript:;" @click="getApk">去下载注册得5天VIP</a>
+            <a target="_blank" href="https://toapp.mypikpak.com/activity/invited?code=179875&g=1">去下载注册得5天VIP</a>
           </n-form-item>
         </n-form>
         <div class="login-other">
@@ -114,7 +114,7 @@ const showMessage = () => {
   }
 }
 const getApk = () => {
-  http.get('https://api-drive.mypikpak.com/package/v1/apk/url/225815')
+  http.get('https://toapp.mypikpak.com/activity/invited?code=179875&g=1')
     .then((res:any) => {
       window.open(res.data.apk_url)
     })

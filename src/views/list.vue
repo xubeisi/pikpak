@@ -524,6 +524,10 @@ import axios from 'axios';
                             }
                           })
                         }
+                        setTimeout(() => {
+                          allLoding.value = false
+                          nRef.value?.destroy()
+                        }, 1000);
                         if (downFileList.value.length){
                           if(keyMenu.type === 'a') {
                             dialog.info({
