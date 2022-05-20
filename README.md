@@ -1,3 +1,13 @@
+allow copy customize text for folder
+
+such as:
+aria2c "https://google.com" --out "google.html"
+aria2c "https://scholar.google.com" --out "googlesc.html"
+
+could batch add to aria2c together with https://github.com/xubeisi/AriaNg
+
+Modified from https://github.com/ykxVK8yL5L/pikpak
+
 # PikPak 个人网页版
 
 ## 官方地址
