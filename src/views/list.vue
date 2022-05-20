@@ -151,6 +151,27 @@
         </template>
       </n-card>
     </n-modal>
+
+
+<n-modal v-model:show="showCopy">
+      <n-card style="width: 600px;" title="拷贝内容">
+        <template #header-extra>
+          <n-icon @click="showCopy = false">
+            <circle-x></circle-x>
+          </n-icon>
+        </template>
+        <template v-if="copyValue">
+          <n-input type="textarea" v-model:value="copyValue"></n-input>
+        </template>
+        <template #action>
+          <n-button :block="true" type="primary" id="copyBtn">拷贝</n-button>
+        </template>
+      </n-card>
+</n-modal>
+
+
+
+
     <n-modal v-model:show="showUserMenu">
       <n-card style="width: 600px;" title="自定义菜单">
         <template #header>
@@ -191,57 +212,17 @@
         </n-form>
       </n-card>
     </n-modal>
-    
-    <n-modal v-model:show="showCopy">
-      <n-card style="width: 600px;" title="复制链接">
-        <template #header-extra>
-          <n-icon @click="showCopy = false">
-            <circle-x></circle-x>
-          </n-icon>
-        </template>
-        <n-form label-width="40px" label-align="left" label-placement="left">
-          <template v-for="item in fileInfo?.medias" :key="item.media_id">
-            <n-form-item :label="item.media_name">
-              <n-input-group>
-                <n-input :value="item.link.url"></n-input>
-                <n-button type="primary" @click="copy(item.link.url)">复制</n-button>
-              </n-input-group>
-            </n-form-item>
-          </template>
-          <n-form-item label="链接">
-            <n-input-group>
-              <n-input :value="fileInfo?.web_content_link"></n-input>
-              <n-button type="primary" @click="copy(fileInfo.web_content_link)">复制</n-button>
-            </n-input-group>
-          </n-form-item>
-        </n-form>
-      </n-card>
-    </n-modal>
-
-    <n-modal v-model:show="showCopyFail">
-      <n-card style="width: 600px;" title="复制失败，自己选择复制">
-        <template #header-extra>
-          <n-icon @click="showCopyFail = false">
-            <circle-x></circle-x>
-          </n-icon>
-        </template>
-        <n-form label-width="0" label-align="left" label-placement="left">
-          <n-form-item>
-            <n-input :value="copyValue"></n-input>
-          </n-form-item>
-        </n-form>
-      </n-card>
-    </n-modal>
 
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from '@vue/reactivity';
+import { VNode } from 'vue'
 import { h, computed, onMounted, watch, nextTick } from '@vue/runtime-core'
 import http, { notionHttp } from '../utils/axios'
 import { useRoute, useRouter } from 'vue-router'
-import { DataTableColumns, NDataTable, NTime, NEllipsis, NModal, NCard, NInput, NBreadcrumb, NBreadcrumbItem, NIcon, useThemeVars, NButton, NTooltip, NSpace, NScrollbar, NSpin, NDropdown, useDialog, NAlert, useNotification, NotificationReactive, NSelect, NForm, NFormItem, NTag, NText, NInputGroup } from 'naive-ui'
+import { DataTableColumns, NDataTable, NTime, NEllipsis, NModal, NCard, NInput, NBreadcrumb, NBreadcrumbItem, NIcon, useThemeVars, NButton, NTooltip, NSpace, NScrollbar, NSpin, NDropdown, useDialog, NAlert, useNotification, NotificationReactive, NSelect, NForm, NFormItem, NTag, NText } from 'naive-ui'
 import { CirclePlus, CircleX, Dots, Share, Copy as IconCopy, SwitchHorizontal, LetterA, ZoomQuestion } from '@vicons/tabler'
 import { byteConvert } from '../utils'
 import PlyrVue from '../components/Plyr.vue'
@@ -391,7 +372,7 @@ import axios from 'axios';
             trigger: 'click',
             placement: 'bottom-end',
             options: getFileActions(row),
-            onSelect: (key:string) => {
+            onSelect: async (key:string) => {
               switch (key) {
                 case 'name':
                   nameModelSHow(row)
@@ -402,14 +383,22 @@ import axios from 'axios';
                 case 'batchMove':
                   batchMove([row.id])
                   break
+                ///修改 newblank
+                case 'newblank':
+                  window.open(window.location.origin + window.location.pathname+"#list/"+row.id,"_blank");
+                  break
+
                 case 'down':
                   downFile(row.id)
                   break
                 case 'copyDown':
                   getFile(row.id)
                     .then((res:any) => {
-                      fileInfo.value = res.data
-                      showCopy.value = true
+                      if(row.mime_type.indexOf('video') != -1 || row.mime_type.indexOf('audio') != -1) {
+                          copy(res.data.medias[0].link.url)
+                          return 
+                      }
+                      copy(res.data.web_content_link)
                     })
                   break
                 case 'aria2Post':
@@ -441,29 +430,112 @@ import axios from 'axios';
                   sharePikPakUrl.value = ''
                   showSharePikPak.value = true
                   break
+                case 'openVLC':
+                   getFile(row.id)
+                        .then((res:any) => {
+                           if(row.mime_type.indexOf('video') != -1 || row.mime_type.indexOf('audio') != -1) {
+                                  let group : VNode[] = [];
+                                  for (let i = 0; i < res.data.medias.length; i++) {
+                                    group.push(h('div', h('a', {'style':'color: rgb(48, 110, 255)','target':'_blank','href':'vlc://'+res.data.medias[i].link.url,'text':res.data.medias[i].media_name})));
+                                  }
+                                  dialog.info({
+                                      title: '自定义操作',
+                                      content: () => h('div', group),
+                                      negativeText: '关闭'
+                                    })
+                                  return 
+                            }else{
+                               dialog.info({
+                                      title: '非媒体文件无法用VLC打开',
+                                      negativeText: '关闭'
+                                    })
+                                  return
+                            }
+                        })
                 default:
                   if(key.indexOf('user') !== -1) {
                     const userMenuKey = Number(key.replace('user-', ''))
                     const keyMenu = userMenu.value[userMenuKey]
                     if(keyMenu) {
-                      getFile(row.id)
-                        .then((res:any) => {
-                          const render =  (template:string) => {
-                            return template.replace(/\{\{(.*?)\}\}/g, (match, key) => {
-                              key = key.trim()
-                              let data = res.data[key]
-                              if(key === 'web_content_link' && res.data.medias && res.data.medias.length > 0) {
-                                data = res.data.medias[0]?.link?.url || data
+                      if(row.kind !== 'drive#folder') {
+                        getFile(row.id)
+                          .then((res:any) => {
+                            const render =  (template:string) => {
+                              return template.replace(/\{\{(.*?)\}\}/g, (match, key) => res.data[key.trim()]);
+                            }
+                            const renderVideo =  (template:string,value:string) => {
+                              return template.replace(/\{\{(.*?)\}\}/g, (match, key) => value.trim());
+                            }
+
+                            if(keyMenu.type === 'a') {
+                              //window.open(render(keyMenu.content), '_target')
+
+                                if(row.mime_type.indexOf('video') != -1 || row.mime_type.indexOf('audio') != -1) {
+                                    let group : VNode[] = [];
+                                    for (let i = 0; i < res.data.medias.length; i++) {
+                                      group.push(h('div', h('a', {'style':'color: rgb(48, 110, 255)','target':'_blank','href':renderVideo(keyMenu.content,res.data.medias[i].link.url),'text':res.data.medias[i].media_name})));
+                                    }
+                                    dialog.info({
+                                        title: '自定义操作',
+                                        content: () => h('div', group),
+                                        negativeText: '关闭'
+                                      })
+                                    return 
+                                }
+                              dialog.info({
+                                  title: '自定义操作',
+                                  content: () =>h('a',{'style':'color: rgb(48, 110, 255)','target':'_blank','href':render(keyMenu.content),'text':render(keyMenu.name)}),
+                                  negativeText: '关闭'
+                                })
+                            } else if(keyMenu.type === 'copy') {
+                              copy(render(keyMenu.content))
+                            }
+                          })
+                      } else {
+
+                        if(allLoding.value) {
+                          return false
+                        }
+                        await getAllFile("Getting all selected")
+                        let group : VNode[] = [];
+                        let text = ''
+                        for(let i in downFileList.value) {
+                          const item = downFileList.value[i]                          
+                          await getFile(item.id) 
+                          .then((res:any) => {
+                            const render =  (template:string) => {
+                              return template.replace(/\{\{(.*?)\}\}/g, (match, key) => res.data[key.trim()]);
+                            }
+                            const renderVideo =  (template:string,value:string) => {
+                              return template.replace(/\{\{(.*?)\}\}/g, (match, key) => value.trim());
+                            }
+
+                            if(keyMenu.type === 'a') {
+                              //window.open(render(keyMenu.content), '_target')
+                              if(row.mime_type.indexOf('video') != -1 || row.mime_type.indexOf('audio') != -1) {
+                                  for (let i = 0; i < res.data.medias.length; i++) {
+                                    group.push(h('div', h('a', {'style':'color: rgb(48, 110, 255)','target':'_blank','href':renderVideo(keyMenu.content,res.data.medias[i].link.url),'text':res.data.medias[i].media_name})));
+                                  }
+                                  return 
                               }
-                              return data
-                            });
-                          }
+                              group.push(h('div', h('a', {'style':'color: rgb(48, 110, 255)','target':'_blank','href':render(keyMenu.content),'text':render(keyMenu.name)})));
+                            } else if(keyMenu.type === 'copy') {
+                              text = text + render(keyMenu.content) + "\n"
+                            }
+                          })
+                        }
+                        if (downFileList.value.length){
                           if(keyMenu.type === 'a') {
-                            window.open(render(keyMenu.content), '_target')
+                            dialog.info({
+                              title: '自定义操作',
+                              content: () => h('div', group),
+                              negativeText: '关闭'
+                            })
                           } else if(keyMenu.type === 'copy') {
-                            copy(render(keyMenu.content))
+                            copy(text)
                           }
-                        })
+                        }
+                      }
                     }
                   }
                   break
@@ -484,26 +556,16 @@ import axios from 'axios';
   const pageToken = ref()
   const getFileList = () => {
     loading.value = true
-    let filters:any = {
-        "phase": {"eq": "PHASE_TYPE_COMPLETE"},
-        "trashed":{"eq":false},
-        // "created_time"
-        // "modified_time"
-        // "kind":{"eq":"drive#folder"},
-        // "mime_type":{"prefix":"video/"},
-    }
-    if(route.name != 'list') {
-      filters['mime_type'] = {"prefix": String(route.name) + '/'}
-    }
-    let parent_id = route.name !== 'list' ? '*' : route.params.id
     http.get('https://api-drive.mypikpak.com/drive/v1/files', {
       params: {
-        parent_id: parent_id,
+        parent_id: route.params.id,
         thumbnail_size: 'SIZE_LARGE',
         with_audit: true,
         page_token: pageToken.value || undefined,
-        limit: 100,
-        filters: filters
+        filters: {
+          "phase": {"eq": "PHASE_TYPE_COMPLETE"},
+          "trashed":{"eq":false}
+        }
       }
     })
       .then((res:any) => {
@@ -527,7 +589,7 @@ import axios from 'axios';
     pageToken.value = ''
     getFileList()
     parentInfo.value = {}
-    if(route.params.id && route.params.id !== '*') {
+    if(route.params.id) {
       getFile(String(route.params.id))
         .then(res => {
           parentInfo.value = res.data
@@ -578,14 +640,13 @@ import axios from 'axios';
         thumbnail_size: 'SIZE_LARGE'
       }
     })
-      .then(res => {
-        return res
-      })
+    .then(res => {
+      return res
+    })
   }
   const showVideo = ref(false)
   const showImage = ref(false)
   const showAddUrl = ref(false)
-  const showCopy = ref(false)
   const newUrl = ref()
   const taskRef = ref()
   const firstFolder = computed(() => {
@@ -683,12 +744,14 @@ import axios from 'axios';
         getFileList()
       })
   }
-  const showCopyFail = ref(false)
-  const copyValue = ref('')
   const copy = (value:string) => {
     nextTick(() => {
-      const fakeElement = document.createElement('button')
-      const clipboard = new ClipboardJS(fakeElement, {
+
+      showCopy.value = true
+      copyValue.value = value
+
+      //const fakeElement = document.getElementById("copyBtn")
+      const clipboard = new ClipboardJS('#copyBtn', {
         text: () => value,
         action: () => 'copy',
       })
@@ -697,13 +760,11 @@ import axios from 'axios';
         clipboard.destroy()
       })
       clipboard.on('error', (e) => {
-        window.$message.error('复制失败，您可以F12打开控制台手动复制，或手动复制弹窗输入框')
-        showCopyFail.value = true
-        copyValue.value = value
+        window.$message.error('复制失败，您可以F12打开控制台手动复制，或重新操作')
         console.log(e.text)
-        clipboard.destroy()
       })
-      fakeElement.click()
+      //fakeElement.click()
+
     })
   }
   const copyAll = async () => {
@@ -747,7 +808,8 @@ import axios from 'axios';
             name: item.name,
             parent: '',
             size: item.size,
-            hash: item.hash
+            hash: item.hash,
+            web_content_link: item.web_content_link
           })
         } else {
           await getFloderFile(item.id, '', item.name)
@@ -846,16 +908,12 @@ import axios from 'axios';
       })
   }
   const aria2Post = (res:any, dir?:string) => {
-    let url = res.data.web_content_link
-    // if(res.data.medias && res.data.medias.length) {
-    //   url = res.data.medias[0]?.link?.url || url
-    // }
     let postData:any = {
         id:'',
         jsonrpc:'2.0',
         method:'aria2.addUri',
         params:[
-            [url],
+            [res.data.web_content_link],
             {
               out: res.data.name
             }
@@ -885,7 +943,7 @@ import axios from 'axios';
       .catch(error => console.error('Error:', error))
   }
   const scrollHandle = (e:any) =>  {
-    if(e.target.offsetHeight + e.target.scrollTop >= e.target.scrollHeight - 30) {
+    if(e.target.offsetHeight - e.target.scrollTop < 30) {
       if(pageToken.value && !loading.value) {
         getFileList()
       }
@@ -961,7 +1019,12 @@ import axios from 'axios';
     }
     showName.value = true
   }
+
+ 
   const showName = ref(false)
+  const copyValue = ref<string>('hello') // foo's type: Ref<string | number>
+  const showCopy = ref(false)
+
   const newName = ref<{
     id: string,
     value: string
@@ -1005,7 +1068,8 @@ import axios from 'axios';
           id: item.id,
           parent: parent || '',
           size: item.size,
-          hash: item.hash
+          hash: item.hash,
+          web_content_link: item.web_content_link
         })
       }
     }
@@ -1066,6 +1130,11 @@ import axios from 'axios';
         key: 'batchMove',
       },
       {
+        label: '新窗口打开',
+        key: 'newblank',
+        disabled: row.kind !== 'drive#folder'
+      },
+      {
         label: '直接下载',
         key: 'down',
         disabled: row.size <= 0
@@ -1090,11 +1159,11 @@ import axios from 'axios';
         key: 'base',
         disabled: row.kind !== 'drive#folder'
       },
-      // {
-      //   label: '分享到资源库',
-      //   key: 'share',
-      //   disabled: !row.hash
-      // },
+      {
+        label: '分享到资源库',
+        key: 'share',
+        disabled: !row.hash
+      },
       {
         label: '删除',
         key: 'delete'
@@ -1104,8 +1173,14 @@ import axios from 'axios';
         key: 'sharePikPak',
         disabled: row.kind === 'drive#folder'
       },
+      {
+        label: 'VLC打开',
+        key: 'openVLC',
+        disabled: row.kind === 'drive#folder'
+      },
     ]
-    if(row.kind !== 'drive#folder') {
+    //if(row.kind !== 'drive#folder') {
+    if(1) {
       if(userMenu.value.length) {
         options.push({
           type: 'divider',
@@ -1144,7 +1219,7 @@ import axios from 'axios';
             mime_type: res.data.mime_type,
             size: res.data.size,
             thumbnail_link: res.data.thumbnail_link,
-            web_content_link:  res.data.web_content_link
+            web_content_link:  res.data.web_content_link,
           },
           info2: {
             medias: res.data.medias,
