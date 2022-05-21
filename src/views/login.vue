@@ -25,7 +25,7 @@
           <n-form-item label="">
             <a target="_blank" href="https://i.mypikpak.com/v1/file/center/account/v1/password/?type=forget_password&locale=zh-cn" class="forget-password">忘记密码</a>
             <router-link to="/register" class="register">注册</router-link>
-            <a target="_blank" href="https://toapp.mypikpak.com/activity/invited?code=179875&g=1">去下载注册得5天VIP</a>
+            <a target="_blank" href="https://toapp.mypikpak.com/activity/invited?code=179875&g=1">得5天VIP(code:179875)</a>
           </n-form-item>
         </n-form>
         <div class="login-other">
