@@ -2,8 +2,10 @@
 https://xubeisi.github.io/pikpak -> https://xubeisi.github.io/a2
 
 allow copy customize text for multiple files and folder
+would be quicker then aria2c all since it doesn't post to your aria2 server and wait response. Normally < 1s per file. 
 
 such as:
+- aria2c "{{web_content_link}}" --out "{{name}}"
 - aria2c "https://google.com" --out "google.html"
 - aria2c "https://scholar.google.com" --out "googlesc.html"
 
