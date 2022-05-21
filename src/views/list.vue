@@ -529,7 +529,7 @@ import axios from 'axios';
                               text = text + render(keyMenu.content) + "\n"
                             }
                           })
-                          if (i % 5 === 1){
+                          if (parseInt(i) % 5 === 1){
                             let timeused = Math.round((performance.now() - starttime)/100)/10
                             if(nRef.value?.content) {
                               nRef.value.content = nRef.value?.content + '\n' + 'Got ' + i + ' files used ' + timeused + 's'
@@ -656,8 +656,10 @@ import axios from 'axios';
         thumbnail_size: 'SIZE_LARGE'
       }
     })
-    .then(res => {
-      res.data['params.url'] = res.data['params']['url']
+    .then((res:any) => {
+      if (res?.data?.params?.url){
+        res.data['params.url'] = res.data.params.url
+      }
       return res
     })
   }
