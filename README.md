@@ -12,7 +12,7 @@ such as:
 could batch add to aria2c together with https://github.com/xubeisi/AriaNg
 
 other template string: 
-kind, id, parent_id, name, user_id, size, revision, file_extension, mime_type, starred, web_content_link, created_time, modified_time, icon_link, thumbnail_link, md5_checksum, hash, links, phase, audit, medias, trashed, delete_time, original_url, params, original_file_index, space, apps, writable, folder_type, collection, parent
+kind, id, parent_id, name, user_id, size, revision, file_extension, mime_type, starred, web_content_link, created_time, modified_time, icon_link, thumbnail_link, md5_checksum, hash, links, phase, audit, medias, trashed, delete_time, original_url, params, original_file_index, space, apps, writable, folder_type, collection, parent, params.url(magnet link)
 
 Source https://github.com/xubeisi/pikpak
 
