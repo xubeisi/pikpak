@@ -499,10 +499,16 @@ import axios from 'axios';
                         await getAllFile("Getting all selected")
                         let group : VNode[] = [];
                         let text = ''
+                        let starttime = performance.now()
                         for(let i in downFileList.value) {
                           const item = downFileList.value[i]                          
                           await getFile(item.id) 
                           .then((res:any) => {
+                            if (item.parent){
+                              res.data['parent'] = item.parent + '/'
+                            } else {
+                              res.data['parent'] = ''
+                            }
                             const render =  (template:string) => {
                               return template.replace(/\{\{(.*?)\}\}/g, (match, key) => res.data[key.trim()]);
                             }
@@ -523,6 +529,12 @@ import axios from 'axios';
                               text = text + render(keyMenu.content) + "\n"
                             }
                           })
+                          if (i % 5 === 1){
+                            let timeused = Math.round((performance.now() - starttime)/100)/10
+                            if(nRef.value?.content) {
+                              nRef.value.content = nRef.value?.content + '\n' + 'Got ' + i + ' files used ' + timeused + 's'
+                            }
+                          }
                         }
                         setTimeout(() => {
                           allLoding.value = false
@@ -645,6 +657,7 @@ import axios from 'axios';
       }
     })
     .then(res => {
+      res.data['params.url'] = res.data['params']['url']
       return res
     })
   }
@@ -794,6 +807,7 @@ import axios from 'axios';
   const allLoding = ref(false)
   const nRef = ref<NotificationReactive>()
   const getAllFile = async (title?:string) => {
+    let starttime = performance.now()
     downFileList.value = []
     allLoding.value = true
     nRef.value = notification.create({
@@ -820,7 +834,8 @@ import axios from 'axios';
         }
       }
     }
-    nRef.value.content = '共获取到' + downFileList.value.length + '个文件'
+    let timeused = Math.round((performance.now() - starttime)/100)/10
+    nRef.value.content = '共获取到' + downFileList.value.length + '个文件: ' + timeused + 's\n'
   }
   const aria2All = async () => {
     if(allLoding.value) {
@@ -1093,7 +1108,8 @@ import axios from 'axios';
     web_content_link: '链接',
     name: '名称',
     size: '大小',
-    hash: '文件HASH值'
+    hash: 'HASH',
+    parent: '文件夹'
   })
   const newMenu = ref<{
     type: string,
