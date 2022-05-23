@@ -183,28 +183,40 @@
           </n-icon>
         </template>
         <n-form label-width="160px" label-align="left" label-placement="left">
-          <n-form-item label="自定义菜单列表：">
+          <n-form-item label="列表：">
             <n-space>
               <template v-for="(item, key) in userMenu" :key="key">
-                <n-tag :closable="true" @close="removeUserMenu(key)">{{item.name}}</n-tag>
+                <n-tag :closable="true" @close="removeUserMenu(key)" @click="loadUserMenu(key)">{{item.name}}</n-tag>
               </template>
             </n-space>
           </n-form-item>
-          <n-form-item label="自定义菜单名称：">
+          <n-form-item label="名称：">
             <n-input v-model:value="newMenu.name"></n-input>
           </n-form-item>
-          <n-form-item label="自定义菜单类型：">
+          <n-form-item label="类型：">
             <n-select :options="menuTypeList" v-model:value="newMenu.type"></n-select>
           </n-form-item>
-          <n-form-item label="自定义菜单可插入：">
+          <n-form-item label="可插入：">
             <n-space>
               <template v-for="(item,k) in menuTextList" :key="k">
-                <n-button @click="newMenu.content = newMenu.content + '{{' + k + '}}'">{{item}}</n-button>
+                <n-button @click="newMenu.content = newMenu.content + '{{' + item + '}}'">{{k}}</n-button>
               </template>
             </n-space>
+            <a href="https://github.com/xubeisi/pikpak/blob/main/README.md#template-string-supporting" target="_blank"> <n-icon style="vertical-align: middle;" size="20" color="#d03050"><zoom-question></zoom-question></n-icon> </a>
           </n-form-item>
-          <n-form-item label="自定义菜单内容：">
+          <n-form-item label="内容：">
             <n-input type="textarea" v-model:value="newMenu.content"></n-input>
+          </n-form-item>
+          <n-form-item label="过滤常用：">
+            <n-space>
+              <template v-for="(item,k) in menuTextFilterList" :key="k">
+                <n-button @click="newMenu.filter = item">{{k}}</n-button>
+              </template>
+            </n-space>
+            <a href="https://github.com/xubeisi/pikpak/blob/main/README.md#filter-string-supporting" target="_blank"> <n-icon style="vertical-align: middle;" size="20" color="#d03050"><zoom-question></zoom-question></n-icon> </a>
+          </n-form-item>
+          <n-form-item label="过滤(regex)：">
+            <n-input type="textarea" rows=1 v-model:value="newMenu.filter"></n-input>
           </n-form-item>
           <n-form-item>
             <n-button type="primary" @click="addUserMenu">添加</n-button>
@@ -492,7 +504,6 @@ import axios from 'axios';
                             }
                           })
                       } else {
-
                         if(allLoding.value) {
                           return false
                         }
@@ -500,8 +511,15 @@ import axios from 'axios';
                         let group : VNode[] = [];
                         let text = ''
                         let starttime = performance.now()
+                        let nfile_afterfilter = 0
                         for(let i in downFileList.value) {
-                          const item = downFileList.value[i]                          
+                          const item = downFileList.value[i]
+                          const ifthis = filterbyUserMenu(item,keyMenu.filter)
+                          if (ifthis){
+                            nfile_afterfilter = nfile_afterfilter + 1
+                          } else {
+                            continue
+                          }
                           await getFile(item.id) 
                           .then((res:any) => {
                             if (item.parent){
@@ -529,17 +547,18 @@ import axios from 'axios';
                               text = text + render(keyMenu.content) + "\n"
                             }
                           })
-                          if (parseInt(i) % 5 === 1){
+                          if (nfile_afterfilter % 5 === 1){
                             let timeused = Math.round((performance.now() - starttime)/100)/10
                             if(nRef.value?.content) {
-                              nRef.value.content = nRef.value?.content + '\n' + 'Got ' + i + ' files used ' + timeused + 's'
+                              let ii = parseInt(i) + 1
+                              nRef.value.content = nRef.value?.content + '\n' + 'Got ' + nfile_afterfilter + '/' + ii + '/' +  downFileList.value.length + ' files used ' + timeused + 's'
                             }
                           }
                         }
                         setTimeout(() => {
                           allLoding.value = false
                           nRef.value?.destroy()
-                        }, 1000);
+                        }, 3000);
                         if (downFileList.value.length){
                           if(keyMenu.type === 'a') {
                             dialog.info({
@@ -657,9 +676,7 @@ import axios from 'axios';
       }
     })
     .then((res:any) => {
-      if (res?.data?.params?.url){
-        res.data['params.url'] = res.data.params.url
-      }
+      res.data['params.url'] = res.data['params']['url']
       return res
     })
   }
@@ -1107,20 +1124,29 @@ import axios from 'axios';
     },
   ])
   const menuTextList = ref({
-    web_content_link: '链接',
-    name: '名称',
-    size: '大小',
-    hash: 'HASH',
-    parent: '文件夹'
+    '链接': 'web_content_link',
+    '名称': 'name',
+    '大小': 'size',
+    'HASH': 'hash',
+    '文件夹': 'parent'
+  })
+  const menuTextFilterList = ref({
+    视频Top: '{{name}}::include::.mkv|.mp4|.avi|.rmvb|.wmv|.flv|.mpeg|.mpg|.mov|.asf|.3gp',
+    视频All: '{{name}}::include::.mkv|.mp4|.avi|.rmvb|.wmv|.flv|.mpeg|.mpg|.mov|.asf|.3gp|.f4v|.mpeg-1|.mpeg1|.mpeg-2|.mpeg2|.mpeg-4|.mpeg4|.mpe|.dat|.3g2|.navi|.asx|.wmvhd|.webm|.qsv|.ogg|.vob|.swf|.xv|.rm|.vcd|.svcd|.divx|.xvid|.dvd',
+    音频Top: '{{name}}::include::.wav|.mp3|.flac|.ape|.wma|.aac',
+    音频All: '{{name}}::include::.wav|.mp3|.flac|.ape|.mp3pro|.midi|.wma|.mp4|.md|.cda|.sacd|.quicktime|.vqf|.dvdaudio|.realaudio|.voc|.au|.aiff|.amiga|.mac|.s48|.aac',
+    不要文字: '{{name}}::exclude::.doc|.docx|.txt|.pdf|.wps|.wpt|.dot|.rtf|.dotx|.docm|.dotm|.xls|.xlt|.xltx|.xltm|.xlsx|.xlsm|.xml|.html|.htm|.mhtml|.mht|.csv|.chm|.wdl|.ppt|.nfo|.url'
   })
   const newMenu = ref<{
     type: string,
     content: string,
-    name: string
+    name: string,
+    filter: string
   }>({
     type: 'a',
     content: '',
-    name: ''
+    name: '',
+    filter: ''
   })
   const showUserMenu = ref(false)
   const userMenu = ref<typeof newMenu.value[]>([])
@@ -1129,13 +1155,43 @@ import axios from 'axios';
     newMenu.value = {
       type: 'a',
       content: '',
-      name: ''
+      name: '',
+      filter: ''
     }
     window.localStorage.setItem('pikpakUserMenu', JSON.stringify(userMenu.value))
   }
   const removeUserMenu = (key:number) => {
     userMenu.value.splice(key, 1)
     window.localStorage.setItem('pikpakUserMenu', JSON.stringify(userMenu.value))
+  }
+  const loadUserMenu = (key:number) => {
+    newMenu.value = JSON.parse(JSON.stringify(userMenu.value[key]))
+  }
+  const filterbyUserMenu = (item:any,filterstr:str) => {
+    const regex_ex = new RegExp('ex', 'i');
+    const filterstrs_and = filterstr.split(/ [aA][nN][dD] /)
+    let sumif_and = true
+    let ifthistest = true
+    for (let i = 0; i < filterstrs_and.length; i++) {
+      const filterstrs_or = filterstrs_and[i].split(/ [oO][rR] /)
+      let sumif_or = false
+      for (let j = 0; j < filterstrs_or.length; j++) {
+        const ftpref = filterstrs_or[j].split("::")
+        const val = ftpref[0].replace(/\{\{(.*?)\}\}/g, (match, key) => item[key.trim()]);
+        if (ftpref[0] === '{{size}}') {
+          ifthistest = eval(val + ftpref[2])          
+        } else {
+          ifthistest = eval("/" + ftpref[2] + "/").test(val)
+        }
+        if (regex_ex.test(ftpref[1])){
+          sumif_or = sumif_or || ! ifthistest;
+        } else {
+          sumif_or = sumif_or || ifthistest;
+        }
+      }
+      sumif_and = sumif_and && sumif_or
+    }
+    return sumif_and
   }
   const getFileActions = (row:any) => {
     const options:DropdownMixedOption[] = [
