@@ -16,7 +16,8 @@
     "streamsaver": "^2.0.5",
     "vue": "^3.2.16",
     "vue-gtag": "^2.0.1",
-    "vue-router": "^4.0.12"
+    "vue-router": "^4.0.12",
+    "yarn": "^1.22.18"
   },
   "devDependencies": {
     "@types/ali-oss": "^6.16.1",

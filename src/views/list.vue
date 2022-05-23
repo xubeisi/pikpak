@@ -1167,7 +1167,7 @@ import axios from 'axios';
   const loadUserMenu = (key:number) => {
     newMenu.value = JSON.parse(JSON.stringify(userMenu.value[key]))
   }
-  const filterbyUserMenu = (item:any,filterstr:str) => {
+  const filterbyUserMenu = (item:any,filterstr:string) => {
     const regex_ex = new RegExp('ex', 'i');
     const filterstrs_and = filterstr.split(/ [aA][nN][dD] /)
     let sumif_and = true

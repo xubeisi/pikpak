@@ -13,7 +13,7 @@ import DPlayer from 'dplayer'
   const initPlayer = () => {
     dp.value = new DPlayer({
       container: dplayerRef.value,
-      logo: 'https://www.mypikpak.com/logo.png',
+      logo: 'https://mypikpak.com/apple-touch-icon.png',
       video: {
         quality: [],
         defaultQuality: 0,

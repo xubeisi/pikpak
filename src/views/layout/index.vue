@@ -39,7 +39,7 @@
       <div class="sider-bottom" v-if="!collapsed" :class="{vip: vipInfo?.status === 'ok'}">
         <div class="bottom-user-info">
           <img src="../../assets/logo1.png" class="user-info-avatar" v-if="vipInfo?.status === 'ok'">
-          <img src="https://www.mypikpak.com/logo.png" v-else class="user-info-avatar">
+          <img src="https://mypikpak.com/apple-touch-icon.png" v-else class="user-info-avatar">
           <div class="user-info-name">
             {{userInfo?.name}}
             <div v-if="vipInfo?.status === 'ok' && vipInfo?.expire">

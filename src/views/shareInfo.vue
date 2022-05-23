@@ -19,7 +19,7 @@
       <template v-if="shareInfo?.share_status === 'PASS_CODE_EMPTY' || shareInfo?.share_status === 'PASS_CODE_ERROR'">
         <div class="share-password">
           <a href="https://mypikpak.com/" target="_blank" class="logo-box">
-            <img src="https://www.mypikpak.com/logo.png" class="logo-box__icon" alt="">
+            <img src="https://mypikpak.com/apple-touch-icon.png" class="logo-box__icon" alt="">
             <div class="logo-box__text">PikPak</div>
           </a>
           <n-form class="password-form">
