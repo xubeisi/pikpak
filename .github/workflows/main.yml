@@ -30,7 +30,7 @@ jobs:
       - name: Install and Build 🔧 
         env:
           REPO_NAME: ${{ github.event.repository.name }}
-          BASE_PATH: ${{ secrets.BASE_PATH }} # 页面Base-path，默认"/{repo_name}"如"/pikpak"
+          BASE_PATH: ${{ secrets.BASE_PATH }} # page Base-path，default "/{repo_name}" like "/pikpak"
         run: |
           [ $BASE_PATH ] || BASE_PATH="/${REPO_NAME}"
           [ "$BASE_PATH" != "/pikpak" ] && sed -i "s|/pikpak|$BASE_PATH|g" vite.config.ts      
@@ -46,3 +46,13 @@ jobs:
           folder: dist 
           repository-name: xubeisi/xubeisi.github.io
           target-folder: pikpak
+      
+      # Runs a single command using the runners shell
+      - name: Copy for Docker
+        uses: JamesIves/github-pages-deploy-action@4.1.5
+        with:
+          token: ${{ secrets.ACCESS_TOKEN }} # Settings > Secret 建立的 ACCESS_TOKEN
+          branch: main
+          folder: dist
+          repository-name: xubeisi/pikpak
+          target-folder: pikpak_docker/dist
