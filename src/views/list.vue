@@ -542,7 +542,7 @@ import axios from 'axios';
                                   }
                                   return 
                               }
-                              group.push(h('div', h('a', {'style':'color: rgb(48, 110, 255)','target':'_blank','href':render(keyMenu.content),'text':render(keyMenu.name)})));
+                              group.push(h('div', h('a', {'style':'color: rgb(48, 110, 255)','target':'_blank','href':render(keyMenu.content),'text': res.data['name']})));
                             } else if(keyMenu.type === 'copy') {
                               text = text + render(keyMenu.content) + "\n"
                             }
