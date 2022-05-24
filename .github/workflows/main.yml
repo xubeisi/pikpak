@@ -44,5 +44,5 @@ jobs:
           token: ${{ secrets.ACCESS_TOKEN }} # Settings > Secret 建立的 ACCESS_TOKEN
           branch: gh-pages
           folder: dist 
-          repositorty-name: xubeisi/xubeisi.github.io
+          repository-name: xubeisi/xubeisi.github.io
           target-folder: pikpak
