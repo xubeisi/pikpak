@@ -42,8 +42,7 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@4.1.5
         with:
           #token: ${{ secrets.ACCESS_TOKEN }} # Settings > Secret 建立的 ACCESS_TOKEN
-          branch: gh-pages # deploy 到 gh-pages 這個分支
-          folder: dist # build 後的資料夾
           branch: gh-pages
+          folder: dist 
           repositorty-name: xubeisi/xubeisi.github.io
           target-folder: pikpak
