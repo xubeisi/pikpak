@@ -43,19 +43,10 @@ jobs:
         with:
           token: ${{ secrets.ACCESS_TOKEN }} # Settings > Secret 建立的 ACCESS_TOKEN
           branch: gh-pages
-          folder: dist 
+          folder: dist
           repository-name: xubeisi/xubeisi.github.io
           target-folder: pikpak
 
-      - name: for rebuild github.io
-        uses: JamesIves/github-pages-deploy-action@4.1.5
-        with:
-          token: ${{ secrets.ACCESS_TOKEN }} # Settings > Secret 建立的 ACCESS_TOKEN
-          branch: main
-          folder: dist 
-          repository-name: xubeisi/xubeisi.github.io
-          target-folder: pikpak
-      
       - name: Copy for Docker
         uses: JamesIves/github-pages-deploy-action@4.1.5
         with:
@@ -63,3 +54,12 @@ jobs:
           folder: dist
           repository-name: xubeisi/pikpak
           target-folder: pikpak_docker/dist
+
+      - name: for rebuild github.io
+        uses: JamesIves/github-pages-deploy-action@4.1.5
+        with:
+          token: ${{ secrets.ACCESS_TOKEN }} # Settings > Secret 建立的 ACCESS_TOKEN
+          branch: main
+          folder: dist
+          repository-name: xubeisi/xubeisi.github.io
+          target-folder: pikpak
