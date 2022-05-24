@@ -1,4 +1,4 @@
-import{b as z,V as c,W as v,X as l,d as p,Y as B,Z as h,_ as y,$ as L,c as f,O as d,r as P,g as T,m as R,i as S}from"./index.bfe30da6.js";const $=typeof window!="undefined";var j={fontWeightActive:"400"};const k=e=>{const{fontSize:r,textColor3:t,primaryColorHover:o,primaryColorPressed:a,textColor2:i}=e;return Object.assign(Object.assign({},j),{fontSize:r,itemTextColor:t,itemTextColorHover:o,itemTextColorPressed:a,itemTextColorActive:i,separatorColor:t})},w={name:"Breadcrumb",common:z,self:k};var E=w,O=c("breadcrumb",`
+import{b as z,V as c,W as v,X as l,d as p,Y as B,Z as h,_ as y,$ as L,c as f,O as d,r as P,g as T,m as R,i as S}from"./index.3e33d447.js";const $=typeof window!="undefined";var j={fontWeightActive:"400"};const k=e=>{const{fontSize:r,textColor3:t,primaryColorHover:o,primaryColorPressed:a,textColor2:i}=e;return Object.assign(Object.assign({},j),{fontSize:r,itemTextColor:t,itemTextColorHover:o,itemTextColorPressed:a,itemTextColorActive:i,separatorColor:t})},w={name:"Breadcrumb",common:z,self:k};var E=w,O=c("breadcrumb",`
  white-space: nowrap;
 `,[v("ul",`
  list-style: none;
