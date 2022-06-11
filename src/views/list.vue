@@ -560,7 +560,7 @@ import axios from 'axios';
                         let text = ''
                         let starttime = performance.now()
                         let nfile_afterfilter = 0
-                        var dedupiddict = {}
+                        var dedupiddict: {[index: string]:any} = {}
                         var dedupid = ''
                         for(let i in downFileList.value) {
                           const item = downFileList.value[i]
