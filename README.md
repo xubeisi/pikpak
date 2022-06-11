@@ -29,6 +29,30 @@ regex for name,parent,id,hash; eval for size
 <img src="https://user-images.githubusercontent.com/1790841/169568832-c8b49b3a-c370-416b-9d30-0d96741a997d.png" width="80%" height="50%">
 <img src="https://user-images.githubusercontent.com/1790841/169568839-130b11f3-5c84-400b-a760-207ec4d3820d.png" width="80%" height="50%">
 
+## Deduplicate
+ - folder1 : test.torrent, test3.torrent
+ - folder2 : test4.torrent, test3.torrent
+
+```
+所有：
+VN4JlpmN3jSOUiOZmptVnTKo1 test4.torrent
+VN4JlpmN3jSOUiOZmptVnTJo1 test3.torrent
+VN2OeMoUN-YkHflrFw2E7qyo1 test3.torrent
+VN2OeMoUN-YkHflrFw2E7qxo1 test.torrent
+
+输出单一：
+VN4JlpmN3jSOUiOZmptVnTKo1 test4.torrent
+VN4JlpmN3jSOUiOZmptVnTJo1 test3.torrent
+VN2OeMoUN-YkHflrFw2E7qxo1 test.torrent
+
+输出重复：#用于批量删除
+VN2OeMoUN-YkHflrFw2E7qyo1 test3.torrent
+```
+
+## Small Tweaks
+ - 增加完全删除,不通过回收站
+ - 增加按{{id}}批量删除,配合Deduplicate的输出重复使用
+
 ## Docker version 
 - https://hub.docker.com/r/xubeisi/pikpak
 Support linux/386,linux/amd64,linux/arm32v6,linux/arm32v7,linux/arm64v8

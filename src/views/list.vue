@@ -81,10 +81,20 @@
           <n-tooltip>
             <template #trigger>
               <n-icon>
+                <trash></trash>
+              </n-icon>
+            </template>
+            回收站所选
+          </n-tooltip>
+        </div>
+        <div class="toolbar-item" @click="deleteFileNoTrash(checkedRowKeys)">
+          <n-tooltip>
+            <template #trigger>
+              <n-icon>
                 <circle-x></circle-x>
               </n-icon>
             </template>
-            删除所选
+            完全删除
           </n-tooltip>
         </div>
       </div>
@@ -99,13 +109,18 @@
         <n-alert :show-icon="false" closable title="添加说明">
           <div>1.支持Magnet链接(magnet:?xt=urn)，Magent链接只能默认保存到My Pack</div>
           <div>2.支持秒传链接(PikPak://PikPak Tutorial.mp4|19682618|123)秒传链接默认保存到当前文件夹或第一个文件夹不能保存到根目录</div>
-          <div>3.支持新建文件夹（普通格式，不带:）</div>
+          <div>3.支持新建文件夹(普通格式，不带:)</div>
           <div>4.换行添加多个</div>
+          <div v-pre>5.批量回收站|完全删除 需要先使用自定义模版{{id}} {{name}}导出,一般输出重复</div>
         </n-alert>
         <br />
         <n-input type="textarea" :rows="4" placeholder="请按说明填写" v-model:value="newUrl"></n-input>
         <template #action>
           <n-button :block="true" type="primary" :disabled="!newUrl" @click="addUrl">添加</n-button>
+          <br />
+          <n-button :block="true" type="primary" :disabled="!newUrl" @click="deletebyPikPak">回收站</n-button>
+          <br />
+          <n-button :block="true" type="primary" :disabled="!newUrl" @click="deletebyPikPakNoTrash">完全删除</n-button>
         </template>
       </n-card>
     </n-modal>
@@ -218,6 +233,13 @@
           <n-form-item label="过滤(regex)：">
             <n-input type="textarea" rows=1 v-model:value="newMenu.filter"></n-input>
           </n-form-item>
+          <n-form-item label="重复处理：">
+            <n-select :options="menuTypeListdedup" v-model:value="newMenu.typededup"></n-select>
+            <a href="https://github.com/xubeisi/pikpak/blob/main/README.md#deduplicate" target="_blank"> <n-icon style="vertical-align: middle;" size="20" color="#d03050"><zoom-question></zoom-question></n-icon> </a>
+          </n-form-item>
+          <n-form-item label="查重复模版：">
+            <n-input type="textarea" rows=1 v-model:value="newMenu.dedupkey" value="{{name}}"></n-input>
+          </n-form-item>
           <n-form-item>
             <n-button type="primary" @click="addUserMenu">添加</n-button>
           </n-form-item>
@@ -235,7 +257,7 @@ import { h, computed, onMounted, watch, nextTick } from '@vue/runtime-core'
 import http, { notionHttp } from '../utils/axios'
 import { useRoute, useRouter } from 'vue-router'
 import { DataTableColumns, NDataTable, NTime, NEllipsis, NModal, NCard, NInput, NBreadcrumb, NBreadcrumbItem, NIcon, useThemeVars, NButton, NTooltip, NSpace, NScrollbar, NSpin, NDropdown, useDialog, NAlert, useNotification, NotificationReactive, NSelect, NForm, NFormItem, NTag, NText } from 'naive-ui'
-import { CirclePlus, CircleX, Dots, Share, Copy as IconCopy, SwitchHorizontal, LetterA, ZoomQuestion } from '@vicons/tabler'
+import { CirclePlus, CircleX, Dots, Share, Copy as IconCopy, SwitchHorizontal, LetterA, ZoomQuestion, Trash } from '@vicons/tabler'
 import { byteConvert } from '../utils'
 import PlyrVue from '../components/Plyr.vue'
 import TaskVue from '../components/Task.vue'
@@ -356,7 +378,7 @@ import axios from 'axios';
             type: 'primary',
             onClick: () => batchMove([row.id])
           }, {
-            default: () => '剪贴'
+            default: () => '剪切'
           }),
           !samllPage.value && row.kind === 'drive#file' && h(NText, {
             type: 'primary',
@@ -369,7 +391,7 @@ import axios from 'axios';
             onClick: () => {
               dialog.warning({
                 title: '警告',
-                content: '确定删除' + row.name  + '？',
+                content: '确定回收站' + row.name  + '？',
                 positiveText: '确定',
                 negativeText: '不确定',
                 onPositiveClick: () => {
@@ -378,7 +400,23 @@ import axios from 'axios';
               })
             }
           }, {
-            default: () => '删除'
+            default: () => '回收站'
+          }),
+          !samllPage.value && h(NText, {
+            type: 'primary',
+            onClick: () => {
+              dialog.warning({
+                title: '警告',
+                content: '确定完全删除' + row.name  + '？',
+                positiveText: '确定',
+                negativeText: '不确定',
+                onPositiveClick: () => {
+                  deleteFileNoTrash(String(row.id))
+                }
+              })
+            }
+          }, {
+            default: () => '完全删除'
           }),
           h(NDropdown, {
             trigger: 'click',
@@ -399,7 +437,6 @@ import axios from 'axios';
                 case 'newblank':
                   window.open(window.location.origin + window.location.pathname+"#list/"+row.id,"_blank");
                   break
-
                 case 'down':
                   downFile(row.id)
                   break
@@ -428,11 +465,22 @@ import axios from 'axios';
                 case 'delete': 
                   dialog.warning({
                       title: '警告',
-                      content: '确定删除' + row.name  + '？',
+                      content: '确定回收站' + row.name  + '？',
                       positiveText: '确定',
                       negativeText: '不确定',
                       onPositiveClick: () => {
                         deleteFile(String(row.id))
+                      }
+                    })
+                  break
+                case 'deletenotrash': 
+                  dialog.warning({
+                      title: '警告',
+                      content: '确定完全删除' + row.name  + '？',
+                      positiveText: '确定',
+                      negativeText: '不确定',
+                      onPositiveClick: () => {
+                        deleteFileNoTrash(String(row.id))
                       }
                     })
                   break
@@ -512,6 +560,8 @@ import axios from 'axios';
                         let text = ''
                         let starttime = performance.now()
                         let nfile_afterfilter = 0
+                        var dedupiddict = {}
+                        var dedupid = ''
                         for(let i in downFileList.value) {
                           const item = downFileList.value[i]
                           const ifthis = filterbyUserMenu(item,keyMenu.filter)
@@ -534,17 +584,34 @@ import axios from 'axios';
                               return template.replace(/\{\{(.*?)\}\}/g, (match, key) => value.trim());
                             }
 
-                            if(keyMenu.type === 'a') {
-                              //window.open(render(keyMenu.content), '_target')
-                              if(row.mime_type.indexOf('video') != -1 || row.mime_type.indexOf('audio') != -1) {
-                                  for (let i = 0; i < res.data.medias.length; i++) {
-                                    group.push(h('div', h('a', {'style':'color: rgb(48, 110, 255)','target':'_blank','href':renderVideo(keyMenu.content,res.data.medias[i].link.url),'text':res.data.medias[i].media_name})));
-                                  }
-                                  return 
+                            var noskip = 1
+                            if (keyMenu.typededup)
+                            {
+                              dedupid = render(keyMenu.dedupkey).toString()
+                              if (dedupid in dedupiddict){
+                                if (keyMenu.typededup === "dedup"){
+                                  noskip = 0
+                                }
+                              } else {
+                                dedupiddict[dedupid] = ""
+                                if (keyMenu.typededup === "duped"){
+                                  noskip = 0
+                                }
                               }
-                              group.push(h('div', h('a', {'style':'color: rgb(48, 110, 255)','target':'_blank','href':render(keyMenu.content),'text': res.data['name']})));
-                            } else if(keyMenu.type === 'copy') {
-                              text = text + render(keyMenu.content) + "\n"
+                            }
+                            if (noskip){
+                              if(keyMenu.type === 'a') {
+                                //window.open(render(keyMenu.content), '_target')
+                                if(row.mime_type.indexOf('video') != -1 || row.mime_type.indexOf('audio') != -1) {
+                                    for (let i = 0; i < res.data.medias.length; i++) {
+                                      group.push(h('div', h('a', {'style':'color: rgb(48, 110, 255)','target':'_blank','href':renderVideo(keyMenu.content,res.data.medias[i].link.url),'text':res.data.medias[i].media_name})));
+                                    }
+                                    return 
+                                }
+                                group.push(h('div', h('a', {'style':'color: rgb(48, 110, 255)','target':'_blank','href':render(keyMenu.content),'text': res.data['name']})));
+                              } else if(keyMenu.type === 'copy') {
+                                text = text + render(keyMenu.content) + "\n"
+                              }
                             }
                           })
                           if (nfile_afterfilter % 5 === 1){
@@ -767,8 +834,43 @@ import axios from 'axios';
       }
     })
   }
+  const deletebyPikPak = () => {
+    const urlList = newUrl.value.split('\n')
+  	let id:string[] = []  
+    urlList.forEach((url:string) => {
+      if(url) {
+        const urlData = url.split(/\s+/)
+    		id.push(urlData[0])
+      }
+    })
+	  deleteFile(id)
+  }
+  const deletebyPikPakNoTrash = () => {
+    const urlList = newUrl.value.split('\n')
+  	let id:string[] = []  
+    urlList.forEach((url:string) => {
+      if(url) {
+        const urlData = url.split(/\s+/)
+    		id.push(urlData[0])
+      }
+    })
+	  deleteFileNoTrash(id)
+  }
   const deleteFile = (id:string | string[]) => {
     http.post('https://api-drive.mypikpak.com/drive/v1/files:batchTrash', {
+      ids: typeof id === 'string' ? [id] : id
+    })
+      .then(() => {
+        window.$message.success('回收站成功')
+        pageToken.value = ''
+        if(typeof id === 'object') {
+          checkedRowKeys.value = []
+        }
+        getFileList()
+      })
+  }
+  const deleteFileNoTrash = (id:string | string[]) => {
+    http.post('https://api-drive.mypikpak.com/drive/v1/files:batchDelete', {
       ids: typeof id === 'string' ? [id] : id
     })
       .then(() => {
@@ -1123,6 +1225,20 @@ import axios from 'axios';
       value: 'copy',
     },
   ])
+  const menuTypeListdedup = ref([
+    {
+      label: "所有",
+      value: '',
+    },
+    {
+      label: "输出单一",
+      value: 'dedup',
+    },
+    {
+      label: "输出重复",
+      value: 'duped',
+    },
+  ])
   const menuTextList = ref({
     '链接': 'web_content_link',
     '名称': 'name',
@@ -1141,12 +1257,16 @@ import axios from 'axios';
     type: string,
     content: string,
     name: string,
-    filter: string
+    filter: string,
+    typededup: string,
+    dedupkey: string
   }>({
     type: 'a',
     content: '',
     name: '',
-    filter: ''
+    filter: '',
+    typededup: '',
+    dedupkey: '{{name}}'
   })
   const showUserMenu = ref(false)
   const userMenu = ref<typeof newMenu.value[]>([])
@@ -1156,7 +1276,9 @@ import axios from 'axios';
       type: 'a',
       content: '',
       name: '',
-      filter: ''
+      filter: '',
+      typededup: '',
+      dedupkey: '{{name}}'
     }
     window.localStorage.setItem('pikpakUserMenu', JSON.stringify(userMenu.value))
   }
@@ -1244,8 +1366,12 @@ import axios from 'axios';
         disabled: !row.hash
       },
       {
-        label: '删除',
+        label: '回收站',
         key: 'delete'
+      },
+      {
+        label: '完全删除',
+        key: 'deletenotrash'
       },
       {
         label: '直接分享',
