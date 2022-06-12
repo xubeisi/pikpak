@@ -97,6 +97,16 @@
             完全删除
           </n-tooltip>
         </div>
+        <div class="toolbar-item" @click="cleanEmptyFolder(checkedRowKeys)">
+          <n-tooltip>
+            <template #trigger>
+              <n-icon>
+                <folder-x></folder-x>
+              </n-icon>
+            </template>
+            清除空文件夹
+          </n-tooltip>
+        </div>
       </div>
     </div>
     <n-modal v-model:show="showAddUrl">
@@ -257,7 +267,7 @@ import { h, computed, onMounted, watch, nextTick } from '@vue/runtime-core'
 import http, { notionHttp } from '../utils/axios'
 import { useRoute, useRouter } from 'vue-router'
 import { DataTableColumns, NDataTable, NTime, NEllipsis, NModal, NCard, NInput, NBreadcrumb, NBreadcrumbItem, NIcon, useThemeVars, NButton, NTooltip, NSpace, NScrollbar, NSpin, NDropdown, useDialog, NAlert, useNotification, NotificationReactive, NSelect, NForm, NFormItem, NTag, NText } from 'naive-ui'
-import { CirclePlus, CircleX, Dots, Share, Copy as IconCopy, SwitchHorizontal, LetterA, ZoomQuestion, Trash } from '@vicons/tabler'
+import { CirclePlus, CircleX, Dots, Share, Copy as IconCopy, SwitchHorizontal, LetterA, ZoomQuestion, Trash, FolderX } from '@vicons/tabler'
 import { byteConvert } from '../utils'
 import PlyrVue from '../components/Plyr.vue'
 import TaskVue from '../components/Task.vue'
@@ -933,7 +943,7 @@ import axios from 'axios';
     allLoding.value = true
     nRef.value = notification.create({
       title: title || '推送到Aria2',
-      closable: false,
+      closable: true,
       content: '正在获取全部文件列表'
     })
     const checkedRowKeysCopy = JSON.parse(JSON.stringify(checkedRowKeys.value))
@@ -951,12 +961,48 @@ import axios from 'axios';
             web_content_link: item.web_content_link
           })
         } else {
-          await getFloderFile(item.id, '', item.name)
+          await getFloderFile(item.id, '', item.name, 'file')
         }
       }
     }
     let timeused = Math.round((performance.now() - starttime)/100)/10
     nRef.value.content = '共获取到' + downFileList.value.length + '个文件: ' + timeused + 's\n'
+  }
+  const cleanEmptyFolder = async (title?:string) => {
+    if(allLoding.value) {
+      return false
+    }
+    let starttime = performance.now()
+    downFileList.value = []
+    allLoding.value = true
+    nRef.value = notification.create({
+      title: title || '清理中',
+      closable: true,
+      content: '正在获取全部文件夹列表'
+    })
+    const checkedRowKeysCopy = JSON.parse(JSON.stringify(checkedRowKeys.value))
+    checkedRowKeys.value = []
+    let text:string[] = []
+    for(let i in filesList.value) {
+      const item = filesList.value[i]
+      if(checkedRowKeysCopy.indexOf(item.id) !== -1) {
+        if(item.kind === 'drive#folder') {
+          await getFloderFile(item.id, '', item.name, 'emptyfolder')
+        }
+      }
+    }
+    let timeused = Math.round((performance.now() - starttime)/100)/10
+    nRef.value.content = '共获取到' + downFileList.value.length + '个空文件夹: ' + timeused + 's\n'
+    if (downFileList.value.length){
+        downFileList.value.forEach((item:any) => {
+          text.push(String(item.id))
+      })
+      deleteFile(text)
+    }
+    setTimeout(() => {
+      allLoding.value = false
+      nRef.value?.destroy()
+    }, 3000);
   }
   const aria2All = async () => {
     if(allLoding.value) {
@@ -1181,7 +1227,7 @@ import axios from 'axios';
       })
   }
   const downFileList = ref<{[key:string]:any}[]>([])
-  const getFloderFile = async (id?:string, page?:string,parent?:string) => {
+  const getFloderFile = async (id?:string, page?:string,parent?:string, fileoremptyfolder?:string) => {
     const res:any = await http.get('https://api-drive.mypikpak.com/drive/v1/files', {
       params: {
         parent_id: id || undefined,
@@ -1196,21 +1242,30 @@ import axios from 'axios';
     })
     const {files, next_page_token} = res.data
     if(next_page_token) {
-      await getFloderFile(id, next_page_token, parent)
+      await getFloderFile(id, next_page_token, parent, fileoremptyfolder)
+    }
+    if (fileoremptyfolder !== "file" && !files.length){
+      downFileList.value.push({
+        name: page,
+        id: id,
+        parent: parent || ''
+      })
     }
     for(let i in files) {
       const item = files[i]
       if(item.kind === 'drive#folder') {
-         await getFloderFile(item.id, '', (parent ? (parent + '/') :  '') + item.name)
+         await getFloderFile(item.id, '', (parent ? (parent + '/') :  '') + item.name, fileoremptyfolder) 
       } else {
-        downFileList.value.push({
-          name: item.name,
-          id: item.id,
-          parent: parent || '',
-          size: item.size,
-          hash: item.hash,
-          web_content_link: item.web_content_link
-        })
+        if (fileoremptyfolder === "file"){
+          downFileList.value.push({
+            name: item.name,
+            id: item.id,
+            parent: parent || '',
+            size: item.size,
+            hash: item.hash,
+            web_content_link: item.web_content_link
+          })
+        }
       }
     }
     return 1

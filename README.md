@@ -52,6 +52,7 @@ VN2OeMoUN-YkHflrFw2E7qyo1 test3.torrent
 ## Small Tweaks
  - 增加完全删除,不通过回收站
  - 增加按{{id}}批量删除,配合Deduplicate的输出重复使用
+ - 增加清理空文件夹,到回收站
 
 ## Docker version 
 - https://hub.docker.com/r/xubeisi/pikpak
