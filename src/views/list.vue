@@ -968,7 +968,7 @@ import axios from 'axios';
     let timeused = Math.round((performance.now() - starttime)/100)/10
     nRef.value.content = '共获取到' + downFileList.value.length + '个文件: ' + timeused + 's\n'
   }
-  const cleanEmptyFolder = async (title?:string) => {
+  const cleanEmptyFolder = async (id:string | string[]) => {
     if(allLoding.value) {
       return false
     }
@@ -976,7 +976,7 @@ import axios from 'axios';
     downFileList.value = []
     allLoding.value = true
     nRef.value = notification.create({
-      title: title || '清理中',
+      title: '清理中',
       closable: true,
       content: '正在获取全部文件夹列表'
     })
