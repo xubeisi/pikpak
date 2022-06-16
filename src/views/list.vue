@@ -570,6 +570,8 @@ import axios from 'axios';
                         let text = ''
                         let starttime = performance.now()
                         let nfile_afterfilter = 0
+                        let nfile_dedup = 0
+                        let nfile_retri = 0
                         var dedupiddict: {[index: string]:any} = {}
                         var dedupid = ''
                         for(let i in downFileList.value) {
@@ -580,8 +582,30 @@ import axios from 'axios';
                           } else {
                             continue
                           }
+
+                          var noskip = 1
+                          if (keyMenu.typededup && keyMenu.dedupkey.length == 0)
+                          {
+                            dedupid = item['name']
+                            if (dedupid in dedupiddict){
+                              if (keyMenu.typededup === "dedup"){
+                                noskip = 0
+                              }
+                            } else {
+                              dedupiddict[dedupid] = ""
+                              if (keyMenu.typededup === "duped"){
+                                noskip = 0
+                              }
+                            }
+                          }
+                          if (!noskip){
+                            continue
+                          } else {
+                            nfile_dedup = nfile_dedup + 1
+                          }
                           await getFile(item.id) 
                           .then((res:any) => {
+                            nfile_retri = nfile_retri + 1
                             if (item.parent){
                               res.data['parent'] = item.parent + '/'
                             } else {
@@ -595,7 +619,7 @@ import axios from 'axios';
                             }
 
                             var noskip = 1
-                            if (keyMenu.typededup)
+                            if (keyMenu.typededup && keyMenu.dedupkey.length > 0)
                             {
                               dedupid = render(keyMenu.dedupkey).toString()
                               if (dedupid in dedupiddict){
@@ -628,9 +652,13 @@ import axios from 'axios';
                             let timeused = Math.round((performance.now() - starttime)/100)/10
                             if(nRef.value?.content) {
                               let ii = parseInt(i) + 1
-                              nRef.value.content = nRef.value?.content + '\n' + 'Got ' + nfile_afterfilter + '/' + ii + '/' +  downFileList.value.length + ' files used ' + timeused + 's'
+                              nRef.value.content = nRef.value?.content + '\n' + 'Got ' + nfile_afterfilter + '/' + nfile_retri + '/' + ii + '/' +  downFileList.value.length + ' files used ' + timeused + 's'
                             }
                           }
+                        }
+                        let timeused = Math.round((performance.now() - starttime)/100)/10
+                        if(nRef.value?.content) {
+                          nRef.value.content = nRef.value?.content + '\n' + 'Got ' + nfile_afterfilter + '/' + nfile_retri + '/' + nfile_dedup + '/' +  downFileList.value.length + ' files used ' + timeused + 's'
                         }
                         setTimeout(() => {
                           allLoding.value = false
@@ -1321,7 +1349,7 @@ import axios from 'axios';
     name: '',
     filter: '',
     typededup: '',
-    dedupkey: '{{name}}'
+    dedupkey: ''
   })
   const showUserMenu = ref(false)
   const userMenu = ref<typeof newMenu.value[]>([])
@@ -1333,7 +1361,7 @@ import axios from 'axios';
       name: '',
       filter: '',
       typededup: '',
-      dedupkey: '{{name}}'
+      dedupkey: ''
     }
     window.localStorage.setItem('pikpakUserMenu', JSON.stringify(userMenu.value))
   }
