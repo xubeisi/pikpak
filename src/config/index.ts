@@ -1,9 +1,9 @@
 export const proxy = [
-  'https://api.13pikpak.cf',
-  'https://api.14pikpak.cf',
-  'https://api.15pikpak.cf',
-  'https://api.16pikpak.cf',
-  'https://api.17pikpak.cf',
+  'https://api-pikpak.go-back.cf',
+  'https://pikpak.wuyun3213.workers.dev',
+  'https://api.pikpakshare.workers.dev',
+  'https://pikpak.pikpakldy.workers.dev',
+  'https://cors.z13.workers.dev',
   'https://api.18pikpak.cf',
 ]
 
